@@ -1,33 +1,57 @@
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lyceum_notif/app_shell.dart';
+import 'package:lyceum_notif/firebase_options.dart';
 import 'package:lyceum_notif/notification_controller.dart';
+import 'package:lyceum_notif/screens/onboarding_screen.dart';
+import 'package:lyceum_notif/screens/splash_screen.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+// ─── FCM background handler — top-level, runs in a separate isolate ──────────
+@pragma('vm:entry-point')
+Future<void> _fcmBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform);
+  await _initAwesomeNotifications();
+  await NotificationController.showFromFcm(message);
+}
 
+Future<void> _initAwesomeNotifications() async {
   await AwesomeNotifications().initialize(
     'resource://drawable/lnulogo',
     [
       NotificationChannel(
         channelKey: 'lnu_channel',
         channelName: 'LNU Notifications',
-        channelDescription: 'Notifications from Lyceum Northwestern University',
+        channelDescription:
+            'Notifications from Lyceum Northwestern University',
         defaultColor: const Color(0xFFA63C45),
         ledColor: const Color(0xFFA63C45),
-        importance: NotificationImportance.High,
+        importance: NotificationImportance.Max,
         channelShowBadge: true,
-        // Show banner & sound even when app is in foreground
         defaultRingtoneType: DefaultRingtoneType.Notification,
         playSound: true,
         enableVibration: true,
+        enableLights: true,
+        criticalAlerts: true,
       ),
     ],
     debug: false,
   );
+}
 
-  // Register listeners — these run in a background isolate when app is killed
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform);
+
+  // Must be registered before any other Firebase call
+  FirebaseMessaging.onBackgroundMessage(_fcmBackgroundHandler);
+
+  await _initAwesomeNotifications();
+
   await AwesomeNotifications().setListeners(
     onActionReceivedMethod: NotificationController.onActionReceivedMethod,
     onNotificationCreatedMethod:
@@ -50,8 +74,15 @@ class MainApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         textTheme: GoogleFonts.interTextTheme(),
+        scaffoldBackgroundColor: Colors.white,
       ),
-      home: const AppShell(),
+      // Splash always shows first, then routes to onboarding or home
+      initialRoute: '/splash',
+      routes: {
+        '/splash': (_) => const SplashScreen(),
+        '/onboarding': (_) => const OnboardingScreen(),
+        '/home': (_) => const AppShell(),
+      },
     );
   }
 }

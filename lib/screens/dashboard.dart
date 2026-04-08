@@ -1,14 +1,13 @@
-import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lyceum_notif/components/app_header.dart';
 import 'package:lyceum_notif/components/notification_card.dart';
-import 'package:lyceum_notif/data/app_data.dart';
+import 'package:lyceum_notif/models/notification_item.dart';
 import 'package:lyceum_notif/screens/notification_detail.dart';
 
 class DashboardScreen extends StatefulWidget {
   final VoidCallback? onSeeAll;
-
   const DashboardScreen({super.key, this.onSeeAll});
 
   @override
@@ -22,48 +21,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   static const Color _primaryMaroon = Color(0xFFA63C45);
   static const Color _lightGrey = Color(0xFFD9D9D9);
 
-  Future<void> _sendNotification() async {
-    final isAllowed = await AwesomeNotifications().isNotificationAllowed();
-    if (!isAllowed) {
-      await AwesomeNotifications().requestPermissionToSendNotifications();
-      return;
-    }
-
-    final latest = AppData.active.isNotEmpty ? AppData.active.first : null;
-    final timeZone =
-        await AwesomeNotifications().getLocalTimeZoneIdentifier();
-
-    // Scheduled 5 seconds ahead — fires even if app is minimized or killed
-    await AwesomeNotifications().createNotification(
-      content: NotificationContent(
-        id: DateTime.now().millisecondsSinceEpoch.remainder(100000),
-        channelKey: 'lnu_channel',
-        title: latest?.title ?? 'LNU LinkUp',
-        body: latest != null
-            ? 'From ${latest.sender} · ${latest.department}'
-            : 'You have a new notification from Lyceum Northwestern University.',
-        notificationLayout: NotificationLayout.Default,
-        wakeUpScreen: true,
-      ),
-      schedule: NotificationInterval(
-        interval: const Duration(seconds: 5),
-        timeZone: timeZone,
-        preciseAlarm: true,
-        repeats: false,
-      ),
-    );
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Notification will appear in 5 seconds'),
-          duration: Duration(seconds: 3),
-        ),
-      );
-    }
-  }
-
-  // DATA ORDER: Mission, Vision, Values, Objectives
   final List<Map<String, String>> _carouselData = [
     {
       "title": "Mission",
@@ -84,7 +41,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final previewItems = AppData.active.take(2).toList();
     final screenHeight = MediaQuery.sizeOf(context).height;
 
     return Column(
@@ -92,120 +48,132 @@ class _DashboardScreenState extends State<DashboardScreen> {
         const AppHeader(),
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 18),
+            padding: const EdgeInsets.fromLTRB(18, 0, 18, 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 15),
 
-                // --- SWIPEABLE INFO CARDS ---
+                // Carousel
                 SizedBox(
-                  height:
-                      screenHeight * 0.28, // Scaled down to prevent awkwardness
-                  child: PageView.builder(
-                    controller: _pageController,
-                    onPageChanged: (index) =>
-                        setState(() => _currentPage = index),
-                    itemCount: _carouselData.length,
-                    itemBuilder: (context, index) {
-                      return _buildInfoCard(_carouselData[index]);
-                    },
+                  height: screenHeight * 0.28,
+              child: PageView.builder(
+                controller: _pageController,
+                onPageChanged: (i) => setState(() => _currentPage = i),
+                itemCount: _carouselData.length,
+                itemBuilder: (context, index) =>
+                    _buildInfoCard(_carouselData[index]),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                _carouselData.length,
+                (i) => _buildDot(isActive: _currentPage == i),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Notification section header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "NOTIFICATION LIST",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5,
                   ),
                 ),
-
-                // --- DOT INDICATORS ---
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                    _carouselData.length,
-                    (index) => _buildDot(isActive: _currentPage == index),
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // --- SEND NOTIFICATION BUTTON ---
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _sendNotification,
-                    icon: const Icon(Icons.notifications_active, size: 18),
-                    label: const Text(
-                      'SEND NOTIFICATION',
+                GestureDetector(
+                  onTap: widget.onSeeAll,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF4B00FF),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Text(
+                      "SEE ALL",
                       style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
                         fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _primaryMaroon,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
                   ),
                 ),
+              ],
+            ),
 
-                const SizedBox(height: 20),
+            const SizedBox(height: 12),
 
-                // --- NOTIFICATION SECTION HEADER ---
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      "NOTIFICATION LIST",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.5,
+            // Firestore preview
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('lnu_notifications')
+                  .where('isArchived', isEqualTo: false)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: _primaryMaroon,
+                        strokeWidth: 2,
                       ),
                     ),
-                    GestureDetector(
-                      onTap: widget.onSeeAll,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF4B00FF),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: const Text(
-                          "SEE ALL",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                  );
+                }
+
+                final docs = snapshot.data?.docs ?? [];
+                final items = docs
+                    .map((d) => NotificationItem.fromFirestore(d))
+                    .take(2)
+                    .toList();
+
+                if (items.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: Center(
+                      child: Text(
+                        "No notifications yet.",
+                        style: TextStyle(color: Colors.grey, fontSize: 13),
+                      ),
+                    ),
+                  );
+                }
+
+                return Column(
+                  children: items
+                      .map(
+                        (item) => Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: NotificationCard(
+                            item: item,
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    NotificationDetailScreen(item: item),
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                  ],
-                ),
+                      )
+                      .toList(),
+                );
+              },
+            ),
 
-                const SizedBox(height: 12),
-
-                // --- NOTIFICATION TILES ---
-                // "Zachary Quality Assurance" and time are handled within NotificationCard
-                // The mapping ensures they align vertically in the list.
-                ...previewItems.map(
-                  (item) => Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: NotificationCard(
-                      item: item,
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => NotificationDetailScreen(item: item),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
                 const SizedBox(height: 20),
               ],
             ),
@@ -231,7 +199,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(24),
-              color: _primaryMaroon.withValues(alpha: 0.75),
+              color: _primaryMaroon.withOpacity(0.75),
             ),
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -246,7 +214,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                // Constraints the text area to keep the bottom clear for the logo
                 Padding(
                   padding: const EdgeInsets.only(right: 80),
                   child: Text(
@@ -260,7 +227,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const Spacer(), // Pushes the following text to the very bottom
+                const Spacer(),
                 const Text(
                   "LYCEUM NORTHWESTERN UNIVERSITY\nQUALITY SINCE 1969",
                   style: TextStyle(

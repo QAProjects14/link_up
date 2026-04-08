@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1067823960365",
+    "project_id": "qaoautomation",
+    "storage_bucket": "qaoautomation.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1067823960365:android:9c3f9444a9bf4296bf03a4",
+        "android_client_info": {
+          "package_name": "com.example.lyceum_notif"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCfXaYybdtCa3GooKfolTfRIAa-OvO3Oys"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

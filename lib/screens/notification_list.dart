@@ -1,32 +1,18 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:lyceum_notif/components/app_header.dart';
 import 'package:lyceum_notif/components/notification_card.dart';
-import 'package:lyceum_notif/data/app_data.dart';
 import 'package:lyceum_notif/models/notification_item.dart';
 import 'package:lyceum_notif/screens/notification_detail.dart';
 
-class NotificationListScreen extends StatefulWidget {
+class NotificationListScreen extends StatelessWidget {
   const NotificationListScreen({super.key});
 
-  @override
-  State<NotificationListScreen> createState() => _NotificationListScreenState();
-}
-
-class _NotificationListScreenState extends State<NotificationListScreen> {
-  late List<NotificationItem> _items;
-
-  @override
-  void initState() {
-    super.initState();
-    _items = AppData.active;
-  }
-
-  void _archiveItem(String id) {
-    setState(() {
-      final idx = AppData.notifications.indexWhere((n) => n.id == id);
-      if (idx != -1) AppData.notifications[idx].isArchived = true;
-      _items = AppData.active;
-    });
+  Future<void> _archiveItem(String id) async {
+    await FirebaseFirestore.instance
+        .collection('lnu_notifications')
+        .doc(id)
+        .update({'isArchived': true});
   }
 
   @override
@@ -36,73 +22,156 @@ class _NotificationListScreenState extends State<NotificationListScreen> {
       children: [
         const AppHeader(),
         Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 16),
-                const Text(
-                  "NOTIFICATION LIST",
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.3,
+          child: StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('lnu_notifications')
+                .where('isArchived', isEqualTo: false)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                    color: Color(0xFFA63C45),
+                    strokeWidth: 2,
                   ),
-                ),
-                const SizedBox(height: 16),
+                );
+              }
+              if (snapshot.hasError) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Text(
+                      'Error: ${snapshot.error}',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.red, fontSize: 13),
+                    ),
+                  ),
+                );
+              }
 
-                if (_items.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 40),
-                    child: Center(
-                      child: Text(
-                        "No notifications.",
-                        style: TextStyle(color: Colors.grey, fontSize: 14),
+              final docs = snapshot.data?.docs ?? [];
+              final items = docs
+                  .map((d) => NotificationItem.fromFirestore(d))
+                  .toList();
+
+              return SingleChildScrollView(
+                // Extra bottom padding so last card clears the floating navbar
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 16),
+                    const Text(
+                      'NOTIFICATION LIST',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.3,
                       ),
                     ),
-                  )
-                else
-                  ..._items.map(
-                    (item) => Padding(
-                      padding: const EdgeInsets.only(bottom: 14),
-                      child: Dismissible(
-                        key: Key(item.id),
-                        direction: DismissDirection.endToStart,
-                        background: Container(
-                          alignment: Alignment.centerRight,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFA63C45),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          padding: const EdgeInsets.only(right: 24),
-                          child: const Icon(
-                            Icons.inventory_2_outlined,
-                            color: Colors.white,
-                            size: 28,
+                    const SizedBox(height: 16),
+                    if (items.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 60),
+                        child: Center(
+                          child: Text(
+                            'No notifications.',
+                            style: TextStyle(color: Colors.grey, fontSize: 14),
                           ),
                         ),
-                        onDismissed: (_) => _archiveItem(item.id),
-                        child: NotificationCard(
-                          item: item,
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  NotificationDetailScreen(item: item),
+                      )
+                    else
+                      ...items.asMap().entries.map(
+                        (e) => _AnimatedCard(
+                          index: e.key,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 14),
+                            child: Dismissible(
+                              key: Key(e.value.id),
+                              direction: DismissDirection.endToStart,
+                              background: Container(
+                                alignment: Alignment.centerRight,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFA63C45),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                padding: const EdgeInsets.only(right: 24),
+                                child: const Icon(
+                                  Icons.inventory_2_outlined,
+                                  color: Colors.white,
+                                  size: 26,
+                                ),
+                              ),
+                              onDismissed: (_) => _archiveItem(e.value.id),
+                              child: NotificationCard(
+                                item: e.value,
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        NotificationDetailScreen(item: e.value),
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-
-                const SizedBox(height: 20),
-              ],
-            ),
+                  ],
+                ),
+              );
+            },
           ),
         ),
       ],
     );
   }
+}
+
+/// Staggered fade+slide animation for each list item
+class _AnimatedCard extends StatefulWidget {
+  final int index;
+  final Widget child;
+  const _AnimatedCard({required this.index, required this.child});
+
+  @override
+  State<_AnimatedCard> createState() => _AnimatedCardState();
+}
+
+class _AnimatedCardState extends State<_AnimatedCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _fade;
+  late Animation<Offset> _slide;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
+    _slide = Tween<Offset>(
+      begin: const Offset(0, 0.08),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
+
+    Future.delayed(Duration(milliseconds: 60 * widget.index), () {
+      if (mounted) _ctrl.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => FadeTransition(
+    opacity: _fade,
+    child: SlideTransition(position: _slide, child: widget.child),
+  );
 }

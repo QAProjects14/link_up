@@ -1,0 +1,45 @@
+{
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs20"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "qaoautomation",
+          "appId": "1:1067823960365:android:9c3f9444a9bf4296bf03a4",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "qaoautomation",
+          "appId": "1:1067823960365:ios:038f5c9380b1fd8cbf03a4",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "macos": {
+        "default": {
+          "projectId": "qaoautomation",
+          "appId": "1:1067823960365:ios:038f5c9380b1fd8cbf03a4",
+          "uploadDebugSymbols": false,
+          "fileOutput": "macos/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "qaoautomation",
+          "configurations": {
+            "android": "1:1067823960365:android:9c3f9444a9bf4296bf03a4",
+            "ios": "1:1067823960365:ios:038f5c9380b1fd8cbf03a4",
+            "macos": "1:1067823960365:ios:038f5c9380b1fd8cbf03a4",
+            "web": "1:1067823960365:web:5c3be9fbfb604ec9bf03a4",
+            "windows": "1:1067823960365:web:64b351bbde4c39d8bf03a4"
+          }
+        }
+      }
+    }
+  }
+}
