@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LinkUp — LNU Notification App</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #003366 0%, #001A40 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: white;
+    }
+
+    .card {
+      background: white;
+      border-radius: 24px;
+      padding: 36px 28px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+      color: #1a1a2e;
+    }
+
+    .logo-ring {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #003366, #001A40);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+    .logo-ring span {
+      color: #F5B800;
+      font-size: 22px;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+
+    h1 { font-size: 26px; font-weight: 800; color: #003366; letter-spacing: 0.5px; }
+    .tagline { font-size: 13px; color: #888; margin-top: 4px; margin-bottom: 24px; }
+
+    .divider { height: 1px; background: #f0f0f0; margin: 20px 0; }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #999;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 15px 20px;
+      border-radius: 14px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.97); opacity: 0.85; }
+
+    .btn-android {
+      background: linear-gradient(135deg, #3DDC84, #2BA060);
+      color: white;
+    }
+    .btn-ios {
+      background: linear-gradient(135deg, #555, #222);
+      color: white;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 2px solid #003366;
+      color: #003366;
+      font-size: 13px;
+      padding: 11px 20px;
+    }
+
+    .ios-note {
+      background: #fff8e6;
+      border: 1px solid #ffd54f;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 12.5px;
+      color: #5a4000;
+      line-height: 1.6;
+      text-align: left;
+    }
+
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 10px;
+      text-align: left;
+      font-size: 13px;
+      color: #444;
+    }
+    .step-num {
+      min-width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #003366;
+      color: white;
+      font-size: 11px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #e8f0fe;
+      color: #003366;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+      margin-bottom: 20px;
+    }
+
+    #android-section, #ios-section, #desktop-section { display: none; }
+
+    footer {
+      margin-top: 24px;
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="logo-ring"><span>LNU</span></div>
+    <h1>LinkUp</h1>
+    <p class="tagline">Official Notification App</p>
+    <div class="badge">LYCEUM NORTHWESTERN UNIVERSITY</div>
+
+    <!-- ANDROID -->
+    <div id="android-section">
+      <div class="section-label">Android Installation</div>
+      <div class="step">
+        <div class="step-num">1</div>
+        <span>Tap <strong>Download APK</strong> below.</span>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <span>Open the downloaded file from your notifications or Downloads folder.</span>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <span>If prompted, allow <strong>Install from Unknown Sources</strong> for your browser app.</span>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <span>Tap <strong>Install</strong> and wait for it to finish.</span>
+      </div>
+      <div class="divider"></div>
+      <a id="apk-link" href="#" class="btn btn-android">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+          <path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/>
+        </svg>
+        Download APK
+      </a>
+    </div>
+
+    <!-- iOS -->
+    <div id="ios-section">
+      <div class="section-label">iOS Installation</div>
+      <div class="ios-note">
+        ⚠️ iOS requires installation via <strong>TestFlight</strong> or the <strong>App Store</strong>.<br/><br/>
+        Please contact the <strong>Quality Assurance Office</strong> to be added as a tester, or request the TestFlight link from your administrator.
+      </div>
+      <div class="divider"></div>
+      <a id="testflight-link" href="#" class="btn btn-ios">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+          <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+        </svg>
+        Open TestFlight Link
+      </a>
+    </div>
+
+    <!-- Desktop -->
+    <div id="desktop-section">
+      <div class="section-label">Get the App</div>
+      <div class="step">
+        <div class="step-num">📱</div>
+        <span>Scan this page's QR code on your <strong>Android device</strong> to download directly.</span>
+      </div>
+      <div class="step">
+        <div class="step-num">🍎</div>
+        <span>For <strong>iOS</strong>, contact the QAO office for a TestFlight invitation.</span>
+      </div>
+      <div class="divider"></div>
+      <a id="desktop-apk-link" href="#" class="btn btn-android" style="margin-bottom:12px;">
+        ⬇ Download Android APK
+      </a>
+    </div>
+  </div>
+
+  <footer>
+    © Lyceum Northwestern University — Quality Assurance Office<br/>
+    LinkUp Notification System
+  </footer>
+
+  <script>
+    // ── Configuration ────────────────────────────────────────────────────────
+    const APK_URL =
+      'https://firebasestorage.googleapis.com/v0/b/qaoautomation.firebasestorage.app/o/linkup.apk?alt=media';
+
+    // Replace with your TestFlight URL once available
+    const TESTFLIGHT_URL = 'https://testflight.apple.com/join/PLACEHOLDER';
+
+    // ── Platform detection ───────────────────────────────────────────────────
+    const ua = navigator.userAgent.toLowerCase();
+    const isAndroid = /android/.test(ua);
+    const isIOS     = /iphone|ipad|ipod/.test(ua);
+
+    document.getElementById('apk-link').href         = APK_URL;
+    document.getElementById('testflight-link').href  = TESTFLIGHT_URL;
+    document.getElementById('desktop-apk-link').href = APK_URL;
+
+    if (isAndroid) {
+      document.getElementById('android-section').style.display = 'block';
+    } else if (isIOS) {
+      document.getElementById('ios-section').style.display = 'block';
+    } else {
+      document.getElementById('desktop-section').style.display = 'block';
+    }
+  </script>
+</body>
+</html>

@@ -266,7 +266,129 @@ class _MemoBody extends StatelessWidget {
   }
 }
 
-// ─── SPREADSHEET BODY ─────────────────────────────────────────────────────────
+// ─── LINK TYPE DETECTION ─────────────────────────────────────────────────────
+
+class _LinkInfo {
+  final IconData icon;
+  final Color color;
+  final Color bgColor;
+  final Color borderColor;
+  final String label;
+  final String description;
+
+  const _LinkInfo({
+    required this.icon,
+    required this.color,
+    required this.bgColor,
+    required this.borderColor,
+    required this.label,
+    required this.description,
+  });
+}
+
+_LinkInfo _detectLinkType(String? url) {
+  if (url == null || url.isEmpty) {
+    return const _LinkInfo(
+      icon: Icons.link_rounded,
+      color: Color(0xFF5C6BC0),
+      bgColor: Color(0xFFF3F4FF),
+      borderColor: Color(0xFFD0D4FF),
+      label: 'LINK SHARED',
+      description: 'A link has been shared with you.',
+    );
+  }
+  final u = url.toLowerCase();
+
+  // YouTube
+  if (u.contains('youtube.com') || u.contains('youtu.be')) {
+    return const _LinkInfo(
+      icon: Icons.play_circle_outline_rounded,
+      color: Color(0xFFFF0000),
+      bgColor: Color(0xFFFFF5F5),
+      borderColor: Color(0xFFFFCCCC),
+      label: 'VIDEO SHARED',
+      description: 'A YouTube video has been shared with you.',
+    );
+  }
+
+  // Google Docs
+  if (u.contains('docs.google.com/document') ||
+      u.contains('docs.google.com/doc')) {
+    return const _LinkInfo(
+      icon: Icons.description_outlined,
+      color: Color(0xFF1A73E8),
+      bgColor: Color(0xFFF0F6FF),
+      borderColor: Color(0xFFBDD7FF),
+      label: 'DOCUMENT SHARED',
+      description: 'A Google Docs document has been shared with you.',
+    );
+  }
+
+  // Google Sheets
+  if (u.contains('docs.google.com/spreadsheet') ||
+      u.contains('sheets.google.com')) {
+    return const _LinkInfo(
+      icon: Icons.table_chart_outlined,
+      color: Color(0xFF0F9D58),
+      bgColor: Color(0xFFF9FFF9),
+      borderColor: Color(0xFFD0EDD0),
+      label: 'SPREADSHEET SHARED',
+      description: 'A Google Sheets spreadsheet has been shared with you.',
+    );
+  }
+
+  // Google Slides
+  if (u.contains('docs.google.com/presentation') ||
+      u.contains('slides.google.com')) {
+    return const _LinkInfo(
+      icon: Icons.slideshow_outlined,
+      color: Color(0xFFF4B400),
+      bgColor: Color(0xFFFFFDF0),
+      borderColor: Color(0xFFFFE9A0),
+      label: 'PRESENTATION SHARED',
+      description: 'A Google Slides presentation has been shared with you.',
+    );
+  }
+
+  // Google Drive (generic file)
+  if (u.contains('drive.google.com')) {
+    return const _LinkInfo(
+      icon: Icons.folder_open_outlined,
+      color: Color(0xFF1A73E8),
+      bgColor: Color(0xFFF0F6FF),
+      borderColor: Color(0xFFBDD7FF),
+      label: 'FILE SHARED',
+      description: 'A file from Google Drive has been shared with you.',
+    );
+  }
+
+  // PDF (by URL extension or common patterns)
+  if (u.endsWith('.pdf') ||
+      u.contains('/pdf/') ||
+      u.contains('?pdf') ||
+      u.contains('filetype=pdf')) {
+    return const _LinkInfo(
+      icon: Icons.picture_as_pdf_outlined,
+      color: Color(0xFFD32F2F),
+      bgColor: Color(0xFFFFF5F5),
+      borderColor: Color(0xFFFFCDD2),
+      label: 'PDF SHARED',
+      description: 'A PDF document has been shared with you.',
+    );
+  }
+
+  // Generic link
+  return const _LinkInfo(
+    icon: Icons.link_rounded,
+    color: Color(0xFF5C6BC0),
+    bgColor: Color(0xFFF3F4FF),
+    borderColor: Color(0xFFD0D4FF),
+    label: 'LINK SHARED',
+    description: 'A link has been shared with you.',
+  );
+}
+
+// ─── SPREADSHEET/LINK BODY ────────────────────────────────────────────────────
 
 class _SpreadsheetBody extends StatelessWidget {
   final NotificationItem item;
@@ -299,6 +421,10 @@ class _SpreadsheetBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final info = _detectLinkType(item.link);
+    final displayTitle =
+        item.mainTitle.isNotEmpty ? item.mainTitle : info.label;
+
     return _DocCard(
       header: _Letterhead(department: item.department),
       body: Column(
@@ -306,7 +432,7 @@ class _SpreadsheetBody extends StatelessWidget {
         children: [
           Center(
             child: Text(
-                item.mainTitle.isNotEmpty ? item.mainTitle : 'DOCUMENT SHARED',
+                displayTitle,
                 style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w900,
@@ -331,19 +457,17 @@ class _SpreadsheetBody extends StatelessWidget {
           const SizedBox(height: 20),
           Container(
             decoration: BoxDecoration(
-                color: const Color(0xFFF9FFF9),
+                color: info.bgColor,
                 borderRadius: BorderRadius.circular(12),
-                border:
-                    Border.all(color: const Color(0xFFD0EDD0))),
+                border: Border.all(color: info.borderColor)),
             padding: const EdgeInsets.all(20),
             child: Column(children: [
-              const Icon(Icons.table_chart_outlined,
-                  color: Color(0xFF0F9D58), size: 42),
+              Icon(info.icon, color: info.color, size: 42),
               const SizedBox(height: 10),
-              const Text(
-                  'A spreadsheet document has been shared with you.',
+              Text(
+                  info.description,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                       fontSize: 13, color: Color(0xFF555555))),
               const SizedBox(height: 16),
               SizedBox(
@@ -354,13 +478,13 @@ class _SpreadsheetBody extends StatelessWidget {
                           ? () => _openLink(context)
                           : null,
                   icon: const Icon(Icons.open_in_new, size: 16),
-                  label: const Text('OPEN DOCUMENT',
+                  label: const Text('OPEN LINK',
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           letterSpacing: 0.8,
                           fontSize: 13)),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0F9D58),
+                    backgroundColor: info.color,
                     foregroundColor: Colors.white,
                     padding:
                         const EdgeInsets.symmetric(vertical: 12),
